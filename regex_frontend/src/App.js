@@ -27,13 +27,13 @@
 
 import React from 'react';
 import FileUpload from './components/FileUpload';
+import { Container } from 'react-bootstrap';
 
 const App = () => {
     return (
-        <div className="App">
-            <h1>Regex Pattern Matching and Replacement</h1>
+        <Container>
             <FileUpload />
-        </div>
+        </Container>
     );
 };
 

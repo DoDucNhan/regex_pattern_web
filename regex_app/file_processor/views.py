@@ -1,16 +1,14 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 
 from .models import UploadedFile
-from .serializers import UploadedFileSerializer
 from django.conf import settings
+from .serializers import UploadedFileSerializer
 
 import pandas as pd
 import openai
 import re
-
 
 
 def convert_natural_language_to_regex(natural_language):
@@ -18,15 +16,17 @@ def convert_natural_language_to_regex(natural_language):
     
     response = openai.Completion.create(
         engine="text-davinci-003",
-        prompt=f"Convert the following natural language description into a regex pattern: '{natural_language}'",
-        max_tokens=50,
+        prompt=f"Convert the following natural language description into a regex pattern and provide a default replacement value: '{natural_language}'",
+        max_tokens=150,
         n=1,
         stop=None,
         temperature=0.5,
     )
 
-    regex_pattern = response.choices[0].text.strip()
-    return regex_pattern
+    response_text = response.choices[0].text.strip()
+    pattern, replacement = response_text.split("Replacement: ")
+    return pattern.strip(), replacement.strip()
+
 
 class FileUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -39,13 +39,13 @@ class FileUploadView(APIView):
         else:
             return Response(file_serializer.errors, status=400)
 
+
 class RegexProcessView(APIView):
     def post(self, request, *args, **kwargs):
         natural_language = request.data.get("pattern")
-        replacement = request.data.get("replacement")
         file_id = request.data.get("file_id")
         
-        regex_pattern = convert_natural_language_to_regex(natural_language)
+        regex_pattern, replacement = convert_natural_language_to_regex(natural_language)
         
         file_instance = UploadedFile.objects.get(id=file_id)
         df = pd.read_excel(file_instance.file.path) if file_instance.file.name.endswith('.xlsx') else pd.read_csv(file_instance.file.path)
@@ -56,4 +56,4 @@ class RegexProcessView(APIView):
         processed_file_path = 'processed_file.csv'
         df.to_csv(processed_file_path, index=False)
 
-        return Response({"message": "File processed successfully", "processed_file": processed_file_path})
+        return Response({"message": "File processed successfully", "processed_file": processed_file_path, "regex_pattern": regex_pattern, "replacement": replacement})
