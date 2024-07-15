@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Container, Form, Button, Alert, Spinner } from 'react-bootstrap';
-import { saveAs } from 'file-saver';
+import DataTable from './DataTable'; // Import the DataTable component
 
 
 const FileUpload = () => {
     const [file, setFile] = useState(null);
-    const [pattern, setPattern] = useState("");
+    const [input, setInput] = useState("");
     const [fileId, setFileId] = useState(null);
     const [processing, setProcessing] = useState(false);
-    const [downloadLink, setDownloadLink] = useState("");
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
     const [regexPattern, setRegexPattern] = useState("");
     const [replacement, setReplacement] = useState("");
+    const [processedCSV, setProcessedCSV] = useState("");
+    const [uploadedData, setUploadedData] = useState([]);
 
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
@@ -36,6 +37,8 @@ const FileUpload = () => {
                 }
             });
             setFileId(response.data.id);
+            // console.log(response.data.data);
+            setUploadedData(response.data.data); // Store uploaded data in state
             setMessage("File uploaded successfully.");
         } catch (err) {
             setError("Error uploading file.");
@@ -43,8 +46,12 @@ const FileUpload = () => {
     };
 
     const handleProcess = async () => {
-        if (!pattern || !fileId) {
-            setError("Please provide the pattern description.");
+        if (!fileId) {
+            setError("Please hit upload button.");
+            return;
+        }
+        if (!input) {
+            setError("Please provide the input description.");
             return;
         }
         setError("");
@@ -52,16 +59,16 @@ const FileUpload = () => {
         setProcessing(true);
 
         const data = {
-            pattern: pattern,
+            input: input,
             file_id: fileId
         };
 
         try {
             const response = await axios.post('http://localhost:8000/api/process/', data);
             setMessage("File processed successfully.");
-            setDownloadLink(response.data.processed_file);
             setRegexPattern(response.data.regex_pattern);
             setReplacement(response.data.replacement);
+            setProcessedCSV(response.data.processed_file);
         } catch (err) {
             setError("Error processing file.");
         } finally {
@@ -71,8 +78,14 @@ const FileUpload = () => {
 
     const handleDownload = async () => {
         try {
-            const response = await axios.get(`http://localhost:8000/${downloadLink}`, { responseType: 'blob' });
-            saveAs(response.data, 'processed_file.csv');
+            const blob = new Blob([processedCSV], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'processed_file.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         } catch (err) {
             setError("Error downloading file.");
         }
@@ -89,10 +102,19 @@ const FileUpload = () => {
                     <Form.Control type="file" onChange={handleFileChange} />
                     <Button variant="primary" className="mt-2" onClick={handleUpload}>Upload</Button>
                 </Form.Group>
-                <Form.Group controlId="formPattern" className="mb-3">
-                    <Form.Label>Pattern</Form.Label>
-                    <Form.Control type="text" placeholder="Enter pattern description" value={pattern} onChange={(e) => setPattern(e.target.value)} />
+
+                {uploadedData.length > 0 && (
+                    <div className="mt-5">
+                        <h2>Uploaded Data</h2>
+                        <DataTable data={uploadedData} />
+                    </div>
+                )}
+
+                <Form.Group controlId="formInput" className="mb-3">
+                    <Form.Label>Input</Form.Label>
+                    <Form.Control type="text" placeholder="Enter input description" value={input} onChange={(e) => setInput(e.target.value)} />
                 </Form.Group>
+
                 <Button variant="success" onClick={handleProcess} disabled={processing}>
                     {processing ? <Spinner animation="border" size="sm" /> : "Process"}
                 </Button>
@@ -104,7 +126,7 @@ const FileUpload = () => {
                         </Alert>
                     </div>
                 )}
-                {downloadLink && (
+                {replacement && (
                     <Button variant="secondary" className="mt-3" onClick={handleDownload}>Download Processed File</Button>
                 )}
             </Form>
