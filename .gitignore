@@ -1,6 +1,8 @@
 # python venv
 venv/
 env/ 
+.csv
+uploads/
 
 # Logs
 logs
