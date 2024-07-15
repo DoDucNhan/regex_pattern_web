@@ -1,6 +1,6 @@
 # Regex Pattern Matching and Replacement Web Application
 
-This project is a web application built using Django and React for regex pattern matching and replacement in CSV files. It integrates a Large Language Model (LLM) from [Meta-Llama-3-8B-Instruct](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct) to convert natural language descriptions into regex patterns.
+This project is a web application built using Django and React for regex pattern matching and replacement in CSV files. It integrates a Large Language Model (LLM) from [Meta-Llama-3-8B-Instruct](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct) to convert natural language descriptions into regex patterns. A brief demonstration can be found [here](https://drive.google.com/file/d/1ywDRVDhIErjTG_BLwSeFe11rq8na32fp/view?usp=sharing).
 
 ## Installation
 
@@ -47,6 +47,8 @@ This project is a web application built using Django and React for regex pattern
     ```
 
 ## Usage
+
+**NOTE**: On your first run, it will take time to download the checkpoint for the LLAMA 3 model.
 
 1. **Running the Development Servers:**
 
