@@ -38,7 +38,7 @@ This project is a web application built using Django and React for regex pattern
 
 4. **Hugging Face API Token Setup:**
 
-   - Obtain an API token from Hugging Face following their documentation.
+   - Obtain an API token from Hugging Face following their documentation. **(Remember to accept meta terms to be granted access to their models)**
    - Replace the token in `settings.py`:
 
     ```python
